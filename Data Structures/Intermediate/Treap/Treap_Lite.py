@@ -83,3 +83,6 @@ if __name__ == "__main__":
     print(left, right)
     treap = Treap.merge(right, left)
     print(treap)
+    left, right = Treap.split(treap, 5)
+    treap = Treap.merge(right, left)
+    print(treap)
