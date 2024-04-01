@@ -5,7 +5,7 @@ class Treap:
     def __init__(self, val):
         if hasattr(val, '__iter__') and not isinstance(val, tuple): #Remove if you're making Treaps of iterables (?)
             raise TypeError("Iterable given as Treap node's value. You likely meant to call Treap.from_iterable")
-        self.aggregate = self.val = val
+        self.aggregate = self.val = val #Created by Brandon Allen
         self.weight = random.randint(1, int(1e9))
         
     #Instanced Methods
@@ -51,7 +51,7 @@ class Treap:
             return (None, None)
         if Treap.count(node.left)<x:
             left, right = Treap.split(node.right, x-Treap.count(node.left)-1)
-            node.right = left
+            node.right = left #Created by Brandon Allen
             Treap._update(node)
             return (node, right)
         else:
@@ -69,8 +69,8 @@ class Treap:
             return l
         if l.weight<r.weight:
             l.right = Treap.merge(l.right, r)
-            res = l
-        else:
+            res = l #Created by Brandon Allen
+        else: 
             r.left = Treap.merge(l, r.left)
             res = r
         Treap._update(res)
