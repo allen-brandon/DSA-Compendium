@@ -1,3 +1,5 @@
+# This code implements an (implicit) treap with sum queries
+# **No efficient propogation functionality**
 import random
 class Treap:
     size = 1
@@ -5,7 +7,7 @@ class Treap:
     def __init__(self, val):
         if hasattr(val, '__iter__') and not isinstance(val, tuple): #Remove if you're making Treaps of iterables (?)
             raise TypeError("Iterable given as Treap node's value. You likely meant to call Treap.from_iterable")
-        self.aggregate = self.val = val #Created by Brandon Allen
+        self.sum = self.val = val #Created by Brandon Allen
         self.weight = random.randint(1, int(1e9))
         
     #Instanced Methods
@@ -39,10 +41,16 @@ class Treap:
     def count(node):
         return node.size if node else 0
     
+    # Find the aggregate of a node
+    def aggr(node):
+        return node.sum if node else 0
+    
     # Update a node's size to be correct (private)
     @staticmethod
     def _update(node):
-        if node: node.size = Treap.count(node.left)+Treap.count(node.right)+1
+        if node:
+            node.size = Treap.count(node.left) + 1 + Treap.count(node.right)
+            node.sum = Treap.aggr(node.left) + node.val + Treap.aggr(node.right)
     
     # Split a Treap into two, < and >= x
     @staticmethod
@@ -76,13 +84,31 @@ class Treap:
         Treap._update(res)
         return res
         
+    # Find a prefix sum in a range
+    @staticmethod
+    def query(node, l=-int(1e9), r=int(1e9)):
+        if not node: return 0
+        # Account for over-querying
+        l = max(l, 0)
+        r = min(r, node.size-1)
+        if (l, r) == (0, node.size-1): return node.sum
+        lpop = Treap.count(node.left)
+        left = Treap.query(node.left, l, r) if l<lpop else 0
+        mid = node.val*(l<=lpop<=r)
+        right = Treap.query(node.right, l-1-lpop, r-1-lpop) if r>lpop else 0
+        return left+mid+right
+    
 if __name__ == "__main__":
     treap = Treap.from_iterable(range(10))
     print(treap)
+    print(f'sum of entire treap: {Treap.query(treap)}')
+    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
     left, right = Treap.split(treap, 5)
     print(left, right)
     treap = Treap.merge(right, left)
     print(treap)
+    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
     left, right = Treap.split(treap, 5)
     treap = Treap.merge(right, left)
     print(treap)
+    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')

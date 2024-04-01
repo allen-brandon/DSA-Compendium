@@ -1,3 +1,5 @@
+# This code implements a simple (implicit) treap
+# No aggregate queries, such as sum, min or max.
 import random
 class Treap:
     size = 1
