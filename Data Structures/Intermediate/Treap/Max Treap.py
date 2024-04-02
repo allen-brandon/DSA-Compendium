@@ -1,6 +1,7 @@
-# This code implements an (implicit) treap with sum queries
-# **No efficient propogation functionality**
+# This code implements an (implicit) treap with max queries
+# Full propagation functionality
 from functools import partial
+import math
 import random
 import operator
 class Treap:
@@ -10,7 +11,7 @@ class Treap:
     def __init__(self, val):
         if hasattr(val, '__iter__') and not isinstance(val, tuple): #Remove if you're making Treaps of iterables (?)
             raise TypeError("Iterable given as Treap node's value. You likely meant to call Treap.from_iterable")
-        self.sum = self.val = val #Created by Brandon Allen
+        self.max = self.val = val #Created by Brandon Allen
         self.weight = random.randint(1, int(1e9))
         
     #Instanced Methods
@@ -27,10 +28,10 @@ class Treap:
         r = self.right.pending_list() if self.right else []
         return l + [self.pend] + r
     
-    def sum_list(self):
-        l = self.left.sum_list() if self.left else []
-        r = self.right.sum_list() if self.right else []
-        return l + [self.sum] + r
+    def max_list(self):
+        l = self.left.max_list() if self.left else []
+        r = self.right.max_list() if self.right else []
+        return l + [self.max] + r
     
     # Convert this to an iterator
     def __iter__(self):
@@ -59,23 +60,22 @@ class Treap:
     # Find the aggregate of a node
     def aggr(node):
         if node:
-            Treap._propagate(node)
-            return node.sum
-        return 0
+            return node.max
+        return -math.inf
     
     @staticmethod
     def _refresh(node):
         '''Update a node's size to be correct (private)'''
         if node:
             node.size = Treap.count(node.left) + 1 + Treap.count(node.right)
-            node.sum = Treap.aggr(node.left) + node.val + Treap.aggr(node.right)
+            node.max = max(Treap.aggr(node.left), node.val, Treap.aggr(node.right))
     
     @staticmethod
     def _propagate(node):
         '''Apply a node's pending updates to its value and children (private)'''
         if not node: return
         node.val+=node.pend
-        node.sum+=node.pend*node.size
+        node.max+=node.pend
         if node.left: node.left.pend+=node.pend
         if node.right: node.right.pend+=node.pend
         node.pend=0
@@ -115,17 +115,17 @@ class Treap:
         
     @staticmethod
     def query(node, l=-int(1e9), r=int(1e9)):
-        '''Find a prefix sum in a range'''
+        '''Find a prefix maximum in a range'''
         Treap._propagate(node)
-        if not node: return 0
+        if not node: return -math.inf
         l, r = max(l, 0), min(r, node.size-1)
-        if (l, r) == (0, node.size-1): return node.sum
+        if (l, r) == (0, node.size-1): return node.max
         lpop = Treap.count(node.left)
-        left = Treap.query(node.left, l, r) if l<lpop else 0
-        mid = node.val*(l<=lpop<=r)# l and r are 0-indexed; lpop is "1-indexed" (e.g. size)
-        right = Treap.query(node.right, l-1-lpop, r-1-lpop) if r>lpop else 0
+        left = Treap.query(node.left, l, r) if l<lpop else -math.inf
+        mid = node.val if l<=lpop<=r else -math.inf# l and r are 0-indexed; lpop is "1-indexed" (e.g. size)
+        right = Treap.query(node.right, l-1-lpop, r-1-lpop) if r>lpop else -math.inf
         Treap._refresh(node)
-        return left+mid+right
+        return max(left, mid, right)
     
     @staticmethod
     def update(node, x, l=-int(1e9), r=int(1e9)):
@@ -146,23 +146,23 @@ class Treap:
 if __name__ == "__main__":
     for _ in range(1000):
         treap = Treap.from_iterable([random.randint(-100, 100) for _ in range(100)])
-        if Treap.query(treap) != sum(list(treap)):
+        if Treap.query(treap) != max(list(treap)):
             raise ValueError("Something went wrong when initializing the treap")
         
         l = random.randint(0, 99)
         r = random.randint(l, 99)
-        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+        if Treap.query(treap, l, r) != max(list(treap)[l:r+1]):
             raise ValueError("Something went wrong with query before changes")
         
         x = random.randint(-100, 100)
         Treap.update(treap, x, l, r)
-        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+        if Treap.query(treap, l, r) != max(list(treap)[l:r+1]):
             raise ValueError("Something went wrong with query after range update")
         
         idx = random.randint(0, 100)
         left, right = Treap.split(treap, idx)
         treap = Treap.merge(right, left)
-        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+        if Treap.query(treap, l, r) != max(list(treap)[l:r+1]):
             raise ValueError("Something went wrong with query after structural change")
     
     print("All tests passed!")
