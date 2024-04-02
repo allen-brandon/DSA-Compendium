@@ -22,6 +22,16 @@ class Treap:
         r = self.right.__list__() if self.right else []
         return l + [self.val] + r
     
+    def pending_list(self):
+        l = self.left.pending_list() if self.left else []
+        r = self.right.pending_list() if self.right else []
+        return l + [self.pend] + r
+    
+    def sum_list(self):
+        l = self.left.sum_list() if self.left else []
+        r = self.right.sum_list() if self.right else []
+        return l + [self.sum] + r
+    
     # Convert this to an iterator
     def __iter__(self):
         return iter(self.__list__())
@@ -35,6 +45,7 @@ class Treap:
     # Create and return a Treap from a sequence
     @staticmethod
     def from_iterable(iter):
+        if isinstance(iter, int): iter = range(iter)
         root = None
         for x in iter:
             root = Treap.merge(root, Treap(x))
@@ -113,6 +124,7 @@ class Treap:
         left = Treap.query(node.left, l, r) if l<lpop else 0
         mid = node.val*(l<=lpop<=r)# l and r are 0-indexed; lpop is "1-indexed" (e.g. size)
         right = Treap.query(node.right, l-1-lpop, r-1-lpop) if r>lpop else 0
+        Treap._refresh(node)
         return left+mid+right
     
     @staticmethod
@@ -123,7 +135,6 @@ class Treap:
         if (l, r) == (0, node.size-1):
             node.pend+=x
             return
-        Treap._propagate(node)
         lpop = Treap.count(node.left)#1 indexed
         if l<=lpop<=r:
             node.val+=x
@@ -131,25 +142,27 @@ class Treap:
             Treap.update(node.left, x, l, r)
         if r>lpop:
             Treap.update(node.right, x, l-1-lpop, r-1-lpop)
-        Treap._refresh(node)
     
 if __name__ == "__main__":
-    treap = Treap.from_iterable(range(10))
-    print(treap)
-    print(f'sum of entire treap: {Treap.query(treap)}')
-    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
-    print()
-    print(Treap.update(treap, 5, 3, 7))
-    print(treap)
-    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
-    print()
-    left, right = Treap.split(treap, 5)
-    treap = Treap.merge(right, left)
-    print(treap)
-    print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
-    print()
-    # left, right = Treap.split(treap, 5)
-    # treap = Treap.merge(right, left)
-    # print()
-    # print(treap)
-    # print(f'sum from indices 3-7: {Treap.query(treap, 3, 7)}')
+    for _ in range(1000):
+        treap = Treap.from_iterable([random.randint(-100, 100) for _ in range(100)])
+        if Treap.query(treap) != sum(list(treap)):
+            raise ValueError("Something went wrong when initializing the treap")
+        
+        l = random.randint(0, 99)
+        r = random.randint(l, 99)
+        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+            raise ValueError("Something went wrong with query before changes")
+        
+        x = random.randint(-100, 100)
+        Treap.update(treap, x, l, r)
+        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+            raise ValueError("Something went wrong with query after range update")
+        
+        idx = random.randint(0, 100)
+        left, right = Treap.split(treap, idx)
+        treap = Treap.merge(right, left)
+        if Treap.query(treap, l, r) != sum(list(treap)[l:r+1]):
+            raise ValueError("Something went wrong with query after structural change")
+    
+    print("All tests passed!")
