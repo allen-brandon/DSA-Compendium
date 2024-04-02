@@ -138,7 +138,7 @@ class Treap:
         lpop = Treap.count(node.left)#1 indexed
         if l<=lpop<=r:
             node.val+=x
-        if l<lpop:
+        if l<lpop:# Created by Brandon Allen
             Treap.update(node.left, x, l, r)
         if r>lpop:
             Treap.update(node.right, x, l-1-lpop, r-1-lpop)
