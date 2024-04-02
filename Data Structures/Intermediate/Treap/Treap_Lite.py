@@ -51,7 +51,7 @@ class Treap:
     def split(node, x):
         if not node:
             return (None, None)
-        if Treap.count(node.left)<x:
+        if Treap.count(node.left)<=x:
             left, right = Treap.split(node.right, x-Treap.count(node.left)-1)
             node.right = left #Created by Brandon Allen
             Treap._update(node)
