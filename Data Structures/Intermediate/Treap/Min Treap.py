@@ -23,16 +23,6 @@ class Treap:
         r = self.right.__list__() if self.right else []
         return l + [self.val] + r
     
-    def pending_list(self):
-        l = self.left.pending_list() if self.left else []
-        r = self.right.pending_list() if self.right else []
-        return l + [self.pend] + r
-    
-    def min_list(self):
-        l = self.left.min_list() if self.left else []
-        r = self.right.min_list() if self.right else []
-        return l + [self.min] + r
-    
     # Convert this to an iterator
     def __iter__(self):
         return iter(self.__list__())
@@ -142,6 +132,7 @@ class Treap:
             Treap.update(node.left, x, l, r)
         if r>lpop:
             Treap.update(node.right, x, l-1-lpop, r-1-lpop)
+        Treap._refresh(node)
     
 if __name__ == "__main__":
     for _ in range(1000):
