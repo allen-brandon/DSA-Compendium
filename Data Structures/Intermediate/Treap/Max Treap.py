@@ -124,6 +124,7 @@ class Treap:
         l, r = max(l, 0), min(r, node.size-1)
         if (l, r) == (0, node.size-1):
             node.pend+=x
+            Treap._propagate(node)
             return
         lpop = Treap.count(node.left)#1 indexed
         if l<=lpop<=r:
