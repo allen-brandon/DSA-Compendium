@@ -49,6 +49,7 @@ class Treap:
     
     # Find the aggregate of a node
     def aggr(node):
+        node._propagate()
         if node:
             return node.max
         return -math.inf
