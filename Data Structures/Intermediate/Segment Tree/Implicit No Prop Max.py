@@ -1,37 +1,47 @@
 #SEG TREE (Implicit No Prop)
-        
+from math import inf
 class SegmentTree:
     def __init__(self, input_arr):
         n = 1<<(len(input_arr).bit_length()-1)
         if n < len(input_arr): n<<=1
         self.n = n
-        self.arr = arr =[0]*n + input_arr + [0]*(n-len(input_arr))
+        self.arr = arr =[-inf]*n + input_arr + [-inf]*(n-len(input_arr))
         for i in range(n-1,0,-1):
-            arr[i] = arr[i*2]+arr[i*2+1]
+            arr[i] = max(arr[i*2], arr[i*2+1])
     
     def __list__(self):
         return self.arr
     def __str__(self):
         return str(self.__list__())
     def update(self, i, val):
+        arr = self.arr
         u, bit = 1, self.n>>1
-        while bit:
+        st = [(u, bit, 1)]
+        while st:
+            u, bit, d = st.pop()
+            if not bit:
+                arr[u]+=val
+                continue
+            if not d:
+                arr[u] = max(arr[u*2], arr[u*2+1])
+                continue
+            st.append((u, bit, 0))
             self.arr[u]+=val
             u*=2
             u+=bool(bit&i)
             bit>>=1
-        self.arr[u]+=val
+            st.append((u, bit, 1))
             
             
     def query(self, l, r):
-        res = 0
+        res = -inf
         st = [(1, l, r, self.n)]
         while st:
             u, l, r, n = st.pop()
             l = max(l, 0)
             r = min(r, n)
             if r-l==n:
-                res+=self.arr[u]
+                res=max(res, self.arr[u])
                 continue
             n//=2
             if l<n:
@@ -40,45 +50,46 @@ class SegmentTree:
                 st.append((u*2+1, l-n, r-n, n))
         return res
     
-
-        
+            
 if __name__ == '__main__':
     import random
     import time
-    testcases, operations, n = 10, 100, 300
+    testcases, operations, n = 1, 20, 1000000
     tree_time = 0
     naive_time = 0
     for t in range(testcases):
         naive_start = time.time()
-        arr = list(random.sample(range(0, n), n))#random.randint(n, n+5)))
+        # arr = list(random.sample(range(-n, n), random.randint(n, n+5)))
+        arr = [0]*n
         naive_time+=time.time()-naive_start
-        n = len(arr)
         tree_start = time.time()
-        tree = SegmentTree(arr)
+        tree = SegmentTree([0]*n)
         tree_time+=time.time()-tree_start
         for op in range(operations):
-            i = random.randint(0, n-1)
-            i_update = i
+            l = random.randint(0, n-1)
+            r = random.randint(l+1, n)
+            l_update, r_update = l, r
             x = random.randint(-5, 5)
             tree_op_start = time.time()
-            tree.update(i, x)
+            tree.update(l, r, x)
             tree_time += time.time() - tree_op_start
             naive_op_start = time.time()
-            arr[i]+=x
+            for i in range(l, r):
+                arr[i]+=x
             naive_time += time.time() - naive_op_start
             l = random.randint(0, n-1)
             r = random.randint(l+1, n)
             l, r = 0, n
             tree_query_start = time.time()
-            tree_val = tree.query(l, r)
+            tree_val = tree[l:r]
             tree_time += time.time() - tree_query_start
             naive_query_start = time.time()
-            arr_val = sum(arr[l:r])
+            arr_val = max(arr[l:r])
             naive_time+=time.time()-naive_query_start
             if tree_val != arr_val:
                 print(tree)
                 print(arr)
-                raise ValueError(f'naive and tree values are different. values: {(tree_val, arr_val)},  update: {(i_update, x)}, query: {(l, r)}')
+                raise ValueError(f'naive and tree values are different. values: {(tree_val, arr_val)},  update: {(l_update, r_update, x)}, query: {(l, r)}')
         #     print(f'operation {op} passed!')
         # print(f'testcase {t} passed!')
             
