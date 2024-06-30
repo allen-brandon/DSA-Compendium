@@ -1,119 +1,81 @@
 #SEG TREE (Implicit Prop)
-        
 class SegmentTree:
     def __init__(self, input_arr):
-        self.n = n = len(input_arr)
-        self.arr = arr = [None]*(n*2)
-        self.pop = pop = [0]*(n*2)
-        self.acc = acc = [0]*(n*2)
-        self.pend = pend = [0]*(n*2)
-        st = [(0, n, 1, 0)]
-        while st:
-            l, r, d, i = st.pop()
-            if l == r: continue
-            if not d:
-                self._refresh(i)
-                continue
-            else:
-                m = l+(r-l)//2
-                arr[i] = input_arr[m]
-                st.append((l, r, 0, i))
-                st.append((m+1, r, 1, i*2+2))
-                st.append((l, m, 1, i*2+1))
+        n = len(input_arr)
+        self.n = n = 1<<(n.bit_length()-1+(n.bit_count()>1))
+        self.arr = [0]*n + input_arr + [0]*(n-len(input_arr))
+        self.pend = [0]*(n*2)
+        for i in range(n*2-1, 1, -1):
+            self.arr[i//2]+=self.arr[i]
     
-    def __str__(self):
-        arr = self.arr
-        st = [(0, 1)]
-        res = []
+    __list__ = lambda self: self.arr[-self.n:]
+    __str__ = lambda self: str(self.__list__())
+    
+    def update(self, l, r, x):
+        st = [(1, l, r, self.n)]
         while st:
-            i, d = st.pop()
-            self._propagate(i)
-            if d:
-                if i*2+2<self.n*2 and self.arr[i*2+2] is not None: st.append((i*2+2, 1))
-                st.append((i, 0))
-                if i*2+1<self.n*2 and self.arr[i*2+1] is not None: st.append((i*2+1, 1))
+            u, l, r, n = st.pop()
+            l = max(0, l)
+            r = min(n, r)
+            if r-l==n:
+                self.pend[u]+=x
+                continue
             else:
-                res.append((arr[i]))
-        return str(res)
-                
-    def update(self, l, r, val):
-        arr, pop, acc, pend = self.arr, self.pop, self.acc, self.pend
-        st = [(0, l, r, 1)]
-        while st:
-            i, l, r, d = st.pop()
-            if not d:
-                self._refresh(i)
-                continue
-            l = max(l, 0)
-            r = min(r, pop[i])
-            if not l and r == pop[i]:
-                pend[i]+=val
-                continue
-            l_pop = self._count(i*2+1)
-            if l<=l_pop and r>l_pop:
-                arr[i]+=val
-            st.append((i, l, r, 0))
-            if r > l_pop+1:
-                st.append((i*2+2, l-l_pop-1, r-l_pop-1, 1))
-            if l < l_pop:
-                st.append((i*2+1, l, r, 1))
+                self.arr[u]+=(x*(r-l))
+            n//=2
+            if l<n:
+                st.append((u*2, l, r, n))
+            if r>n:
+                st.append((u*2+1, l-n, r-n, n))
             
-    
+        
     def query(self, l, r):
-        arr, pop, acc, pend = self.arr, self.pop, self.acc, self.pend
-        res = 0 #Identity element
-        st = [(0, l, r)]
+        res = 0
+        st = [(1, l, r, self.n)]
         while st:
-            i, l, r = st.pop()
-            self._propagate(i)
-            l = max(l, 0)
-            r = min(r, pop[i])
-            if not l and r == pop[i]:
-                res += acc[i]
+            u, l, r, n = st.pop()
+            self.arr[u]+=self.pend[u]*n
+            if n != 1:
+                self.pend[u*2]+=self.pend[u]
+                self.pend[u*2+1]+=self.pend[u]
+            self.pend[u]=0
+            l = max(0, l)
+            r = min(n, r)
+            if r-l==n:
+                res+=self.arr[u]
                 continue
-            l_pop = self._count(i*2+1)
-            res += arr[i]*(l<=l_pop)*(r>l_pop)
-            if r > l_pop+1:
-                st.append((i*2+2, l-l_pop-1, r-l_pop-1))
-            if l < l_pop:
-                st.append((i*2+1, l, r))
+            n//=2
+            if l<n:
+                st.append((u*2, l, r, n))
+            if r>n:
+                st.append((u*2+1, l-n, r-n, n))
         return res
 
-    
-    def _refresh(self, i):
-        self._propagate(i)
-        self.acc[i] = self._aggr(i*2+1)+self.arr[i]+self._aggr(i*2+2)
-        self.pop[i] = self._count(i*2+1)+1+self._count(i*2+2)
-        
-    def _propagate(self, i):
-        self.arr[i] += self.pend[i]
-        self.acc[i] += self.pend[i]*self.pop[i]
-        if i*2+1<self.n*2 and self.arr[i*2+1] is not None: self.pend[i*2+1]+=self.pend[i]
-        if i*2+2<self.n*2 and self.arr[i*2+2] is not None: self.pend[i*2+2]+=self.pend[i]
-        self.pend[i] = 0 #Identity element
-        
-    def _aggr(self, i):
-        if i<self.n*2 and self.arr[i] is not None:
-            self._propagate(i)
-            return self.acc[i]
-        else:
-            return 0
-    
-    def _count(self, i):
-        return self.pop[i] if i<self.n*2 and self.arr[i] is not None else 0
 
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     import random
     import time
-    testcases, operations, n = 100, 100, 100
+    testcases, operations, m = 100, 100, 10000
     tree_time = 0
     naive_time = 0
     for t in range(testcases):
         naive_start = time.time()
-        arr = list(random.sample(range(-n, n), random.randint(n, n+5)))
+        arr = list(random.sample(range(-m, m), random.randint(m, m+5)))
         naive_time+=time.time()-naive_start
         n = len(arr)
         tree_start = time.time()
@@ -140,6 +102,8 @@ if __name__ == '__main__':
             arr_val = sum(arr[l:r])
             naive_time+=time.time()-naive_query_start
             if tree_val != arr_val:
+                print(tree.arr)
+                print(tree.pend)
                 print(tree)
                 print(arr)
                 raise ValueError(f'naive and tree values are different. values: {(tree_val, arr_val)},  update: {(l_update, r_update, x)}, query: {(l, r)}')

@@ -21,7 +21,7 @@ class PrefixHash:
     #Inclusive of l and r
     def query(self, l, r):
         return (self.pref[r+1]-self.pref[l])*self.invpref[l]%self.mod
-    
+
 ### Notes ###
 # 
 
