@@ -1,14 +1,25 @@
 #SEG TREE (Implicit Prop)
 class SegmentTree:
     def __init__(self, input_arr):
-        n = len(input_arr)
-        self.n = n = 1<<(n.bit_length()-1+(n.bit_count()>1))
+        n = 1<<(len(input_arr).bit_length()-1)
+        if n < len(input_arr): n<<=1
+        self.n = n
         self.arr = [0]*n + input_arr + [0]*(n-len(input_arr))
         self.pend = [0]*(n*2)
-        for i in range(n*2-1, 1, -1):
-            self.arr[i//2]+=self.arr[i]
-    
-    __list__ = lambda self: self.arr[-self.n:]
+        for i in range(n-1,0,-1):
+            self.arr[i] = self.arr[i*2]+self.arr[i*2+1]
+            
+    def flush_pending(self):
+        for i in range(n):
+            self.pend[i*2]+=self.pend[i]
+            self.pend[i*2+1]+=self.pend[i]
+        for i in range(n, n*2):
+            self.arr[i]+=self.pend[i]
+        self.pend = [0]*(n*2)
+        for i in range(n-1, 0, -1):
+            self.arr[i] = self.arr[i*2]+self.arr[i*2+1]
+            
+    __list__ = lambda self: self.flush_pending() or self.arr[-self.n:]
     __str__ = lambda self: str(self.__list__())
     
     def update(self, l, r, x):
@@ -51,26 +62,10 @@ class SegmentTree:
                 st.append((u*2+1, l-n, r-n, n))
         return res
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
     import random
     import time
-    testcases, operations, m = 100, 100, 10000
+    testcases, operations, m = 10, 10, 1000000
     tree_time = 0
     naive_time = 0
     for t in range(testcases):
@@ -102,8 +97,8 @@ if __name__ == '__main__':
             arr_val = sum(arr[l:r])
             naive_time+=time.time()-naive_query_start
             if tree_val != arr_val:
-                print(tree.arr)
-                print(tree.pend)
+                # print(tree.arr)
+                # print(tree.pend)
                 print(tree)
                 print(arr)
                 raise ValueError(f'naive and tree values are different. values: {(tree_val, arr_val)},  update: {(l_update, r_update, x)}, query: {(l, r)}')
