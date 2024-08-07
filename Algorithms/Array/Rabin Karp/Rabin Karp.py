@@ -4,7 +4,7 @@ class PrefixHash:
     #Input a string encoded as an array (e.g. numbers bounded from 0-26)
     #Initialization is O(n)
     def __init__(self, arr):
-        self.mod = mod = 344555666677777
+        self.mod = mod = 455666777788888999999
         self.base = base = 37
         self.inv = inv = pow(base, mod-2, mod)
         self.pref = pref = [0]
@@ -31,7 +31,7 @@ class PrefixHash:
 #     #Input a string encoded as an array (e.g. numbers bounded from 0-26)
 #     #Initialization is O(n)
 #     def __init__(self, arr):
-#         self.mod = mod = 344555666677777
+#         self.mod = mod = 455666777788888999999
 #         self.base = base = 37
 #         self.inv = inv = pow(base, mod-2, mod)
 #         self.pref = pref = [0]
