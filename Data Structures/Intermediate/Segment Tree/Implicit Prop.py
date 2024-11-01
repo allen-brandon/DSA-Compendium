@@ -10,6 +10,7 @@ class SegmentTree:
             self.arr[i] = self.arr[i*2]+self.arr[i*2+1]
             
     def flush_pending(self):
+        n = self.n
         for i in range(n):
             self.pend[i*2]+=self.pend[i]
             self.pend[i*2+1]+=self.pend[i]
