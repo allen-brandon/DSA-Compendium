@@ -1,11 +1,11 @@
 from numpy import array, round, diag
 from numpy.linalg import eig, matrix_power, matrix_rank
-def diagonalize(matrix):
-    if len(matrix) != len(matrix[0]):
+def diagonalize(mat):
+    if len(mat) != len(mat[0]):
         raise ValueError("Tried to diagonalize a non-square matrix")
-    if matrix_rank(matrix) != len(matrix):
+    if matrix_rank(mat) != len(mat):
         raise ValueError("Tried to diagonalize a rank deficient matrix")
-    diagonal, basis = eig(matrix)
+    diagonal, basis = eig(mat)
     inv_basis = matrix_power(basis, -1)
     return (basis, diagonal, inv_basis)
 
